@@ -11,6 +11,9 @@ The agent turns that into PayPal API calls (Invoicing, Orders, Payments, Payouts
 
 Built for the PayPal AI Hackathon (Devpost).
 
+**Live demo:** https://agentpay-4lga.onrender.com (PayPal sandbox, US merchant app, Gemini `gemini-3.5-flash-lite`; Render free tier, so the first load can take about a minute to wake up). Only use sandbox/demo addresses such as `name.demo@example.com`.
+**Code:** https://github.com/Rahulrachu/agentpay
+
 ---
 
 ## What it does
@@ -145,7 +148,7 @@ pytest -q
 - Refunds of a *real* sandbox checkout need a buyer to pay the link with a sandbox personal account first. Capture and refund are covered by mocked-HTTP tests and mock mode, not yet by a live run.
 
 ## What has been verified against the live PayPal sandbox
-Run with real sandbox REST credentials (an India-registered sandbox business account), November 2026:
+Run with real sandbox REST credentials, November 2026: first on an India-registered sandbox business account, then on a **US** sandbox merchant app (the one behind the live demo).
 
 | Flow | Live result |
 |---|---|
@@ -155,10 +158,10 @@ Run with real sandbox REST credentials (an India-registered sandbox business acc
 | Invoicing v2: cancel | ✅ works |
 | Orders v2: checkout link (`payer-action` URL, total shown) | ✅ works |
 | Orders v2: capture after buyer approval, Payments v2: refund | ⏳ not yet run live (needs a sandbox buyer to pay) |
-| Payouts v1 | ❌ blocked by PayPal for India-registered merchants ("You live in a country that is not allowed to send this payout"). The agent now explains this in plain words. Use a **US** sandbox business account's credentials to demo payouts; the payout code is unchanged. |
+| Payouts v1 | ✅ works on the **US** sandbox merchant app (batch submitted, status PENDING for an unregistered `example.com` recipient). ❌ Blocked by PayPal for India-registered merchants ("You live in a country that is not allowed to send this payout"); the agent explains this in plain words. |
 | INR invoices to Indian buyers | ❌ blocked by PayPal for India-registered merchants (`INR_FOREIGN_CURRENCY_BLOCKED`); also explained in plain words. Invoice international customers in USD, or use a non-India sandbox account. |
 
-What depends on the account's country: **payouts** and **INR** (and which currencies the account can receive in general). Everything else above worked on the India sandbox account. PayPal's own error text is always shown after the friendly explanation, so nothing is hidden.
+What depends on the account's country: **payouts** and **INR** (and which currencies the account can receive in general). Invoicing and checkout links worked on both accounts; payouts only on the US one. PayPal's own error text is always shown after the friendly explanation, so nothing is hidden.
 
 ## Built during the hackathon
 All code in this repository was written during the PayPal AI Hackathon submission period (November 2026) for this submission. It uses open-source libraries (FastAPI, httpx, Pydantic, Uvicorn, pytest) and public PayPal, OpenAI, and Google Gemini REST APIs.

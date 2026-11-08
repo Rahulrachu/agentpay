@@ -1,0 +1,35 @@
+TITLE
+AgentPay: AI payments agent on PayPal (PayPal AI Hackathon demo)
+
+VISIBILITY
+Unlisted
+
+DESCRIPTION
+AgentPay is an AI payments agent for freelancers and small sellers. You say what you need in plain words, and it does the PayPal work: invoices, multi-client invoice plans, checkout links, "who hasn't paid me?" summaries, reminders and payouts. Anything that sends money or messages a customer waits for your approval first.
+
+Everything in this video runs on the live app against the PayPal sandbox, with Gemini (gemini-3.5-flash-lite) as the brain. All customers are demo addresses (name.demo@example.com).
+
+Live demo: https://agentpay-4lga.onrender.com
+Code: https://github.com/Rahulrachu/agentpay
+
+Chapters
+0:00 The problem and AgentPay
+0:17 Invoice from one sentence, approve, send
+0:43 Two clients, one plan, per-step approvals
+1:03 Checkout link for a consultation
+1:17 Who hasn't paid me? Summary and reminders
+1:38 Payout to a collaborator (US sandbox merchant app)
+1:52 Audit log
+2:02 How it's built
+
+Built with: PayPal Invoicing v2, Orders v2, Payouts v1, Gemini function calling, Python, FastAPI, httpx, Pydantic, SQLite.
+Built for the PayPal AI Hackathon on Devpost.
+
+TAGS
+AgentPay, PayPal, PayPal API, PayPal sandbox, PayPal Invoicing API, PayPal Orders API, PayPal Payouts, AI agent, agentic commerce, Gemini, function calling, tool calling, FastAPI, Python, hackathon, Devpost, PayPal AI Hackathon, invoicing, freelancers, small business, human in the loop
+
+THUMBNAIL
+agentpay_thumbnail.png (1280x720)
+
+CAPTIONS
+agentpay_demo.srt (English; the MP4 also carries the same captions as a soft subtitle track)

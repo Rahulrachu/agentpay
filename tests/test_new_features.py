@@ -325,3 +325,9 @@ def test_agent_without_store_argument_still_works():
     agent = Agent(MockPayPalClient(), today_fn=lambda: TODAY)
     out = agent.handle("Invoice Priya $40 for logo design")
     assert first_confirm(out["blocks"])["why"]
+
+
+def test_llm_debug_endpoints_are_not_exposed(api):
+    c, _ = api
+    for path in ("/api/llm/models", "/api/llm/ping"):
+        assert c.get(path).status_code in (404, 405)

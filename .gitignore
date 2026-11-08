@@ -8,3 +8,8 @@ data/
 *.db
 *.db-wal
 *.db-shm
+
+# demo video build artefacts (kept local, not uploaded)
+demo/build/
+demo/*.mp4
+demo/*.png
