@@ -35,7 +35,7 @@ def test_gemini_function_call_parsed():
         return httpx.Response(200, json={"candidates": [{"content": {"parts": [
             {"functionCall": {"name": "unpaid_summary", "args": {}}}]}}]})
 
-    brain = LLMBrain("gemini", "g-test", "gemini-2.5-flash", http=httpx.Client(transport=httpx.MockTransport(handler)))
+    brain = LLMBrain("gemini", "g-test", "gemini-3.8-flash", http=httpx.Client(transport=httpx.MockTransport(handler)))
     plan = brain.plan("who hasn't paid?")
     assert plan.tool_calls[0].name == "unpaid_summary"
 

@@ -81,7 +81,7 @@ class Settings:
 
 def load_settings() -> Settings:
     provider = os.getenv("LLM_PROVIDER", "").strip().lower()
-    default_model = {"openai": "gpt-4o-mini", "gemini": "gemini-2.5-flash"}.get(provider, "")
+    default_model = {"openai": "gpt-4o-mini", "gemini": "gemini-3.8-flash"}.get(provider, "")
     return Settings(
         paypal_client_id=os.getenv("PAYPAL_CLIENT_ID", "").strip(),
         paypal_client_secret=os.getenv("PAYPAL_CLIENT_SECRET", "").strip(),
