@@ -76,6 +76,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(503, body)
         return body
 
+    @app.get("/api/llm/models", include_in_schema=False)
+    def llm_models():
+        """Names of Gemini models this key can use (no secrets), to pick a working LLM_MODEL."""
+        if settings.llm_provider != "gemini" or not settings.gemini_api_key:
+            return {"models": []}
+        import httpx as _httpx
+        r = _httpx.get("https://generativelanguage.googleapis.com/v1beta/models",
+                       params={"pageSize": 200}, headers={"x-goog-api-key": settings.gemini_api_key}, timeout=20)
+        if r.status_code >= 400:
+            return {"error": r.status_code, "detail": r.text[:300]}
+        return {"models": [m.get("name") for m in r.json().get("models", [])
+                           if "generateContent" in (m.get("supportedGenerationMethods") or [])]}
+
     @app.get("/api/status")
     def status():
         return {**settings.describe(), "last_brain": agent.last_brain}
