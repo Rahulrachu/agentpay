@@ -308,7 +308,7 @@ def test_gemini_http_error_falls_back_to_parser_and_is_audited(api):
     c, agent = api
     agent.brain = gemini(lambda req: httpx.Response(429, json={"error": {"status": "RESOURCE_EXHAUSTED"}}))
     blocks = chat(c, PLAN_MSG)
-    assert "LLM unavailable: HTTPStatusError" in blocks[0]["text"]
+    assert "LLM unavailable: LLMHTTPError" in blocks[0]["text"]
     assert blocks[1]["type"] == "plan" and len(blocks[1]["steps"]) == 3
     assert c.get("/api/status").json()["last_brain"] == "rule-based parser (LLM fallback)"
     assert c.get("/api/audit").json()["entries"][-1]["event"] == "llm_fallback"
