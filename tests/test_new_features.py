@@ -245,9 +245,9 @@ def test_health_and_status(api):
 
 def test_status_labels_for_sandbox_and_gemini():
     s = Settings(paypal_client_id="id", paypal_client_secret="sec", paypal_env="sandbox",
-                 llm_provider="gemini", gemini_api_key="g", llm_model="gemini-3.8-flash")
+                 llm_provider="gemini", gemini_api_key="g", llm_model="gemini-3.5-flash-lite")
     d = s.describe()
-    assert d["mode"] == "Sandbox" and d["llm"] == "Gemini · gemini-3.8-flash" and d["llm_enabled"]
+    assert d["mode"] == "Sandbox" and d["llm"] == "Gemini · gemini-3.5-flash-lite" and d["llm_enabled"]
     assert "g" not in json.dumps({k: v for k, v in d.items() if k != "llm"}).split('"')  # no key in status
 
 
@@ -268,7 +268,7 @@ def test_mock_client_persists_without_agent():
 # ------------------------------------------------------------------ Gemini robustness
 
 def gemini(handler):
-    return LLMBrain("gemini", "g-test", "gemini-3.8-flash", http=httpx.Client(transport=httpx.MockTransport(handler)))
+    return LLMBrain("gemini", "g-test", "gemini-3.5-flash-lite", http=httpx.Client(transport=httpx.MockTransport(handler)))
 
 
 def test_gemini_request_shape_and_multi_call_with_thought_signature():
@@ -286,11 +286,11 @@ def test_gemini_request_shape_and_multi_call_with_thought_signature():
     brain = gemini(handler)
     plan = brain.plan(PLAN_MSG, history=[{"role": "user", "content": "hi"}, {"role": "assistant", "content": ""}],
                       today=TODAY)
-    assert seen["url"].endswith("/v1beta/models/gemini-3.8-flash:generateContent")
+    assert seen["url"].endswith("/v1beta/models/gemini-3.5-flash-lite:generateContent")
     assert [c["role"] for c in seen["body"]["contents"]] == ["user", "user"]  # empty history turn dropped
     assert "reason" in seen["body"]["tools"][0]["functionDeclarations"][0]["parameters"]["properties"]
     assert [c.name for c in plan.tool_calls] == ["create_invoice", "remind_invoice"]
-    assert brain.label == "Gemini · gemini-3.8-flash"
+    assert brain.label == "Gemini · gemini-3.5-flash-lite"
 
 
 @pytest.mark.parametrize("payload", [

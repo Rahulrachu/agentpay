@@ -44,7 +44,7 @@ class LLMBrain:
         self.provider = provider
         self.api_key = api_key
         self.model = model
-        self.http = http or httpx.Client(timeout=45)
+        self.http = http or httpx.Client(timeout=25)
         self.default_currency = default_currency
         self.label = f"{ {'openai': 'OpenAI', 'gemini': 'Gemini'}.get(provider, provider) } · {model}"
 
