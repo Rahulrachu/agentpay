@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#003087">
+<title>AgentPay · talk to your PayPal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#001c64;--pp:#003087;--blue:#0070e0;--blue-600:#005ec2;--blue-50:#eef5ff;--blue-100:#dbe9ff;
+  --bg:#f5f7fb;--card:#fff;--ink:#0b1b3f;--ink-2:#334155;--muted:#64748b;--line:#e4e9f2;--line-2:#eef2f8;
+  --green:#047857;--green-50:#e7f8f0;--amber:#b45309;--amber-50:#fff6e5;--red:#c0262d;--red-50:#fdeced;
+  --violet:#6d28d9;--violet-50:#f1ebff;--slate-50:#f1f4f9;
+  --r:16px;--r-sm:10px;--shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px rgba(16,24,40,.06);
+  --shadow-lg:0 10px 30px rgba(0,28,100,.12);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);
+  -webkit-font-smoothing:antialiased;display:flex;flex-direction:column;height:100dvh;font-size:15px;line-height:1.5}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+a{color:var(--blue)}
+/* ---------- header */
+header{display:flex;align-items:center;gap:14px;padding:12px 22px;background:linear-gradient(100deg,var(--navy),var(--pp) 55%,#0a4bb8);color:#fff;flex:none}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(140deg,#fff,#cfe2ff);display:grid;place-items:center;color:var(--pp);font-weight:800;font-size:17px;box-shadow:inset 0 -2px 0 rgba(0,48,135,.15);flex:none}
+.brand h1{margin:0;font-size:17px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+.brand p{margin:0;font-size:12.5px;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pills{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.hpill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);white-space:nowrap}
+.hpill .dot{width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.25)}
+.hpill.sandbox .dot{background:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.3)}
+.hpill.live .dot{background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.3)}
+.hpill .k{opacity:.7;font-weight:500}
+/* ---------- mobile tabs */
+#tabs{display:none;background:#fff;border-bottom:1px solid var(--line);padding:6px 10px;gap:6px;flex:none}
+#tabs button{flex:1;padding:8px 6px;border-radius:10px;font-weight:600;font-size:14px;color:var(--muted);position:relative}
+#tabs button.on{background:var(--blue-50);color:var(--pp)}
+#tabs .badge{position:absolute;top:3px;right:12px}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:700}
+/* ---------- layout */
+main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 420px;min-height:0}
+#chat{display:flex;flex-direction:column;min-height:0;min-width:0}
+#log{flex:1;overflow:auto;padding:26px clamp(14px,4vw,40px) 12px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+/* ---------- empty state */
+#empty{margin:auto;max-width:720px;width:100%;text-align:center;padding:10px 0 20px}
+#empty .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:12.5px;font-weight:600;color:var(--pp);background:var(--blue-50);border:1px solid var(--blue-100);padding:5px 12px;border-radius:999px}
+#empty h2{font-size:clamp(24px,3.4vw,32px);letter-spacing:-.6px;margin:14px 0 6px;font-weight:800}
+#empty p.lead{color:var(--muted);margin:0 auto 22px;max-width:520px}
+.examples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;text-align:left}
+.ex{text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);transition:transform .12s,border-color .12s,box-shadow .12s;display:flex;gap:12px;align-items:flex-start}
+.ex:hover{transform:translateY(-2px);border-color:#b9d3ff;box-shadow:var(--shadow-lg)}
+.ex .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;flex:none;background:var(--blue-50)}
+.ex b{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.ex span{font-size:14.5px;font-weight:500;color:var(--ink)}
+.seed{margin-top:16px;font-size:13.5px;color:var(--muted)}
+.seed button{color:var(--blue);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+/* ---------- messages */
+.row{display:flex;gap:10px;align-items:flex-start;max-width:760px;width:100%}
+.row.me{align-self:flex-end;justify-content:flex-end}
+.av{width:30px;height:30px;border-radius:9px;background:var(--pp);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;margin-top:2px}
+.stack{display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.bubble{padding:11px 15px;border-radius:16px;white-space:pre-wrap;word-wrap:break-word;max-width:100%}
+.me .bubble{background:var(--blue);color:#fff;border-bottom-right-radius:5px;max-width:560px}
+.ai{background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start;box-shadow:0 1px 2px rgba(16,24,40,.03)}
+.err{background:var(--red-50);border:1px solid #f6c6c9;color:var(--red);align-self:flex-start}
+.why{display:flex;gap:7px;align-items:flex-start;font-size:13px;color:var(--muted);margin-top:2px}
+.why i{font-style:normal;font-weight:600;color:var(--ink-2)}
+.why svg{flex:none;margin-top:3px}
+.typing{display:inline-flex;gap:4px;padding:14px 16px}
+.typing span{width:7px;height:7px;border-radius:50%;background:#9db4d6;animation:b 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+/* ---------- approval card */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;align-self:flex-start;width:100%;max-width:520px}
+.approval{border-top:4px solid var(--blue)}
+.approval.danger{border-top-color:#f59e0b}
+.ap-head{display:flex;align-items:center;gap:8px;padding:12px 16px 0;font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--blue)}
+.danger .ap-head{color:var(--amber)}
+.ap-main{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:6px 16px 10px}
+.ap-action{font-size:13px;color:var(--muted);font-weight:600}
+.ap-amount{font-size:28px;font-weight:800;letter-spacing:-.8px;line-height:1.1}
+.ap-to{font-size:14px;color:var(--ink-2);margin-top:2px;word-break:break-word}
+.ap-to b{font-weight:600}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:5px 14px;font-size:13.5px;padding:10px 16px;border-top:1px solid var(--line-2);background:#fbfcfe}
+.kv dt{color:var(--muted)}.kv dd{margin:0;color:var(--ink-2);word-break:break-word}
+.ap-why{padding:10px 16px 0}
+.btns{display:flex;gap:8px;padding:12px 16px 14px;align-items:center;flex-wrap:wrap}
+.btn{border-radius:999px;padding:9px 18px;font-weight:600;font-size:14px;transition:background .12s,transform .05s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--blue);color:#fff}.btn.primary:hover{background:var(--blue-600)}
+.btn.ghost{background:var(--slate-50);color:var(--ink-2)}.btn.ghost:hover{background:#e6ebf3}
+.btn.sm{padding:6px 13px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:default}
+.resolved{font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.resolved.ok{color:var(--green)}.resolved.no{color:var(--muted)}.resolved.bad{color:var(--red)}
+/* ---------- plan card */
+.plan{border-top:4px solid var(--pp);max-width:620px}
+.plan-h{padding:14px 16px 10px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.plan-h h3{margin:0;font-size:16px;font-weight:700}
+.plan-h q{display:block;font-size:13px;color:var(--muted);margin-top:2px;quotes:"“" "”"}
+.steps{list-style:none;margin:0;padding:0 16px}
+.step{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line-2)}
+.num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:700;background:var(--blue-50);color:var(--pp)}
+.step.done .num{background:var(--green-50);color:var(--green)}
+.step.error .num,.step.declined .num{background:var(--slate-50);color:var(--muted)}
+.step-top{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.step-title{font-weight:600}
+.step-out{font-size:13.5px;color:var(--ink-2);margin-top:4px}
+.mini{margin-top:8px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fbfcfe;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.mini .t{font-size:13.5px}.mini .t b{font-size:15px}
+.mini .acts{display:flex;gap:6px}
+.plan-f{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:12px 16px 14px;border-top:1px solid var(--line-2);background:#fbfcfe;flex-wrap:wrap}
+.plan-f .hint{margin-right:auto;font-size:12.5px;color:var(--muted)}
+/* ---------- pills */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;letter-spacing:.2px}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+.p-draft{background:#eef1f6;color:#475569}.p-sent{background:var(--blue-50);color:var(--blue-600)}
+.p-paid{background:var(--green-50);color:var(--green)}.p-overdue{background:var(--red-50);color:var(--red)}
+.p-refunded{background:var(--violet-50);color:var(--violet)}.p-cancelled{background:#f1f2f4;color:#6b7280}
+.p-waiting{background:var(--amber-50);color:var(--amber)}.p-error{background:var(--red-50);color:var(--red)}
+/* ---------- link + table */
+.linkcard{display:flex;gap:12px;align-items:center;padding:12px 14px;max-width:520px}
+.linkcard .ic{width:38px;height:38px;border-radius:11px;background:var(--blue-50);display:grid;place-items:center;flex:none}
+.linkcard .m{min-width:0;flex:1}.linkcard small{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tablewrap{overflow:auto;max-width:100%;align-self:flex-start}
+table{border-collapse:separate;border-spacing:0;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:420px}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--line-2);white-space:nowrap}
+th{background:#f8fafd;color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+tr:last-child td{border-bottom:0}
+.chip{background:var(--blue-50);color:var(--pp);border:1px solid var(--blue-100);font-size:13.5px;font-weight:600;padding:7px 14px;border-radius:999px;align-self:flex-start}
+.chip:hover{background:var(--blue-100)}
+/* ---------- composer */
+#composer{padding:10px clamp(12px,4vw,40px) calc(14px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,transparent)}
+#f{display:flex;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px 6px 6px 8px;box-shadow:var(--shadow);max-width:900px;margin:0 auto}
+#f:focus-within{border-color:#8fb8f5;box-shadow:0 0 0 4px rgba(0,112,224,.12)}
+#input{flex:1;min-width:0;font:inherit;border:0;outline:none;padding:9px 6px;background:transparent;color:var(--ink)}
+.icbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:var(--muted)}
+.icbtn:hover{background:var(--slate-50)}
+#mic.on{background:var(--red-50);color:var(--red)}
+#sendb{background:var(--blue);color:#fff}#sendb:hover{background:var(--blue-600)}
+.foot{font-size:11.5px;color:var(--muted);text-align:center;margin-top:7px}
+/* ---------- side panel */
+aside{border-left:1px solid var(--line);background:#fff;display:flex;flex-direction:column;min-height:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px 16px 6px}
+.stat{background:var(--bg);border:1px solid var(--line-2);border-radius:12px;padding:10px 12px;min-width:0}
+.stat .l{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.stat .v{font-size:18px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat .v.multi{font-size:14px;line-height:1.35;padding-top:2px}
+.stats{grid-template-columns:1.5fr 1fr 1fr}
+.stat.alert .v{color:var(--red)}
+.seg{display:flex;gap:4px;margin:10px 16px 4px;background:var(--slate-50);padding:4px;border-radius:12px}
+.seg button{flex:1;padding:7px;border-radius:9px;font-weight:600;font-size:13.5px;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.1)}
+.panel{flex:1;overflow:auto;padding:4px 16px 20px}
+.sec{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13.5px;background:#fff}
+.item .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .amt{font-weight:700}
+.item .sub{color:var(--muted);font-size:12.5px;margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.item .sub a{font-weight:600;text-decoration:none}
+.item.wait{border-color:#fcd9a0;background:var(--amber-50)}
+.none{font-size:13px;color:var(--muted);padding:6px 2px}
+.aud{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:13px}
+.aud time{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px;padding-top:2px}
+.aud .s{color:var(--ink)}.aud .meta{grid-column:2;color:var(--muted);font-size:12px}
+.ev{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:1px 7px;border-radius:6px;margin-right:6px;background:var(--slate-50);color:var(--ink-2)}
+.ev.approved,.ev.executed{background:var(--green-50);color:var(--green)}
+.ev.proposed,.ev.planned{background:var(--blue-50);color:var(--blue-600)}
+.ev.declined{background:#f1f2f4;color:#6b7280}.ev.failed,.ev.llm_fallback{background:var(--red-50);color:var(--red)}
+/* ---------- toasts */
+#toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:50;pointer-events:none}
+.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;background:var(--ink);color:#fff;padding:11px 14px;border-radius:12px;box-shadow:var(--shadow-lg);font-size:14px;max-width:360px;animation:tin .2s ease-out}
+.toast.ok .d{background:#34d399}.toast.bad .d{background:#f87171}.toast.info .d{background:#60a5fa}
+.toast .d{width:8px;height:8px;border-radius:50%;flex:none}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* ---------- responsive */
+@media (max-width:980px){
+  main{grid-template-columns:1fr}
+  #tabs{display:flex}
+  aside{border-left:0;display:none}
+  body[data-view="ledger"] aside,body[data-view="audit"] aside{display:flex}
+  body[data-view="ledger"] #chat,body[data-view="audit"] #chat{display:none}
+  .seg{display:none}
+}
+@media (max-width:640px){
+  header{padding:10px 14px;gap:10px}
+  .brand p{display:none}
+  .hpill{font-size:11.5px;padding:5px 9px}.hpill .k{display:none}
+  .examples{grid-template-columns:1fr}
+  #empty h2{margin-top:10px}
+  .ap-amount{font-size:24px}
+  .av{display:none}
+  #toasts{left:12px;right:12px;bottom:84px}
+  .toast{max-width:none}
+  .stats{gap:6px}.stat{padding:8px 10px}.stat .v{font-size:16px}
+  .foot{display:none}
+  #empty p.lead{font-size:14px;margin-bottom:16px}
+}
+</style>
+</head>
+<body data-view="chat">
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true">A</div>
+    <div><h1>AgentPay</h1><p>Talk to your PayPal. The agent drafts, you approve.</p></div>
+  </div>
+  <div class="pills">
+    <span class="hpill" id="modePill" title="Which PayPal the agent is talking to"><span class="dot"></span><span class="k">PayPal</span><span id="modeTxt">…</span></span>
+    <span class="hpill" id="brainPill" title="Which brain turns your words into PayPal actions">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+      <span class="k">Brain</span><span id="brainTxt">…</span></span>
+  </div>
+</header>
+<nav id="tabs" aria-label="Views">
+  <button data-v="chat" class="on">Chat</button>
+  <button data-v="ledger">Ledger <span class="badge" id="tabBadge" hidden>0</span></button>
+  <button data-v="audit">Audit log</button>
+</nav>
+<main>
+  <section id="chat" aria-label="Chat with the agent">
+    <div id="log" aria-live="polite">
+      <div id="empty">
+        <span class="eyebrow">🔒 Nothing moves money until you click Approve</span>
+        <h2>What should we get paid for today?</h2>
+        <p class="lead">Ask in plain words. AgentPay drafts invoices, checkout links, reminders, refunds and payouts on PayPal, explains each step, and waits for your approval.</p>
+        <div class="examples" id="examples"></div>
+        <div class="seed" id="seedWrap" hidden>Empty ledger? <button id="seedBtn" type="button">Load demo data</button> (2 overdue invoices, a paid order, all simulated)</div>
+      </div>
+    </div>
+    <div id="composer">
+      <form id="f" autocomplete="off">
+        <button type="button" id="mic" class="icbtn" title="Dictate (browser speech recognition)" aria-label="Dictate">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <input id="input" placeholder="Invoice Priya $40 for logo design, due Friday" aria-label="Message">
+        <button id="sendb" class="icbtn" aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+      <div class="foot">Sends, reminders, cancellations, refunds and payouts always ask first · every action is in the audit log</div>
+    </div>
+  </section>
+  <aside aria-label="Ledger">
+    <div class="stats">
+      <div class="stat"><div class="l">Owed to you</div><div class="v" id="sOwed">—</div></div>
+      <div class="stat" id="sOverWrap"><div class="l">Overdue</div><div class="v" id="sOver">0</div></div>
+      <div class="stat"><div class="l">To approve</div><div class="v" id="sWait">0</div></div>
+    </div>
+    <div class="seg" role="tablist"><button data-v="ledger" class="on">Ledger</button><button data-v="audit">Audit log</button></div>
+    <div class="panel" id="ledgerPanel">
+      <div class="sec">Awaiting your approval</div><div id="pending"></div>
+      <div class="sec">Invoices</div><div id="invoices"></div>
+      <div class="sec">Checkout orders</div><div id="orders"></div>
+    </div>
+    <div class="panel" id="auditPanel" hidden>
+      <div class="sec">Every action, newest first <a href="/api/audit" target="_blank" style="margin-left:auto;font-size:12px;text-transform:none;letter-spacing:0">JSON ↗</a></div>
+      <div id="audit"></div>
+    </div>
+  </aside>
+</main>
+<div id="toasts" aria-live="assertive"></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SYM = {USD:"$", INR:"₹", EUR:"€", GBP:"£"};
+const money = (v, c) => (SYM[c] || (c + " ")) + Number(v || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const H = {"Content-Type": "application/json", "x-agentpay-client": "web"};
+const post = (u, b) => fetch(u, {method: "POST", headers: H, body: JSON.stringify(b || {})}).then(r => r.json());
+const EXAMPLES = [
+  ["🧭", "Multi-step plan", "Invoice Priya $40 and Arjun $25 for the workshop, remind anyone overdue"],
+  ["🛍️", "Checkout link", "Make a checkout link for 2 T-shirts at $15"],
+  ["📋", "Who owes me", "Who hasn't paid?"],
+  ["↩️", "Refund", "Refund the last order"],
+];
+const ICON_WHY = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>`;
+
+/* ---------- status pills */
+function pill(status) {
+  const s = String(status || "").toUpperCase();
+  const map = {DRAFT:["Draft","draft"], SENT:["Sent","sent"], UNPAID:["Sent","sent"], SCHEDULED:["Scheduled","sent"], PAYMENT_PENDING:["Pending","waiting"],
+    PARTIALLY_PAID:["Part paid","sent"], PAID:["Paid","paid"], MARKED_AS_PAID:["Paid","paid"], COMPLETED:["Paid","paid"], OVERDUE:["Overdue","overdue"],
+    REFUNDED:["Refunded","refunded"], PARTIALLY_REFUNDED:["Part refunded","refunded"], CANCELLED:["Cancelled","cancelled"],
+    CREATED:["Awaiting buyer","waiting"], PAYER_ACTION_REQUIRED:["Awaiting buyer","waiting"], APPROVED:["Buyer approved","sent"], VOIDED:["Voided","cancelled"]};
+  const [label, cls] = map[s] || [s.charAt(0) + s.slice(1).toLowerCase(), "draft"];
+  return `<span class="pill p-${cls}">${esc(label)}</span>`;
+}
+const stepPill = s => ({done: `<span class="pill p-paid">Done</span>`, awaiting: `<span class="pill p-waiting">Needs approval</span>`,
+  declined: `<span class="pill p-cancelled">Cancelled</span>`, error: `<span class="pill p-error">Failed</span>`}[s] || "");
+
+/* ---------- toasts */
+function toast(text, kind = "ok") {
+  const t = document.createElement("div"); t.className = "toast " + kind; t.innerHTML = `<span class="d"></span><span>${esc(text)}</span>`;
+  $("#toasts").appendChild(t); setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity .3s"; setTimeout(() => t.remove(), 300); }, 3800);
+}
+
+/* ---------- chat rendering */
+function clearEmpty() { const e = $("#empty"); if (e) e.remove(); }
+function agentRow() {
+  clearEmpty();
+  const row = document.createElement("div"); row.className = "row";
+  row.innerHTML = `<div class="av">A</div><div class="stack"></div>`;
+  $("#log").appendChild(row); return row.querySelector(".stack");
+}
+function scrollDown() { const l = $("#log"); l.scrollTop = l.scrollHeight; }
+function userMsg(text) {
+  clearEmpty();
+  const row = document.createElement("div"); row.className = "row me"; row.innerHTML = `<div class="bubble">${esc(text)}</div>`;
+  $("#log").appendChild(row); scrollDown();
+}
+const whyHtml = w => w ? `<div class="why">${ICON_WHY}<span><i>Why:</i> ${esc(w)}</span></div>` : "";
+
+function blockEl(b) {
+  const d = document.createElement("div");
+  if (b.type === "text") { d.className = "bubble ai"; d.textContent = b.text; if (b.why) d.insertAdjacentHTML("beforeend", whyHtml(b.why)); }
+  else if (b.type === "error") { d.className = "bubble err"; d.textContent = b.text; if (b.why) d.insertAdjacentHTML("beforeend", whyHtml(b.why)); }
+  else if (b.type === "suggest") { d.className = "chip"; d.setAttribute("role", "button"); d.textContent = b.text; d.onclick = () => send(b.text); d.style.cursor = "pointer"; }
+  else if (b.type === "link") {
+    d.className = "card linkcard";
+    d.innerHTML = `<div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0070e0" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div>
+      <div class="m"><b>${esc(b.label)}</b><small>${esc(b.note || "")}</small><small>${esc(b.url)}</small></div>
+      <a class="btn primary sm" href="${esc(b.url)}" target="_blank" rel="noopener" style="text-decoration:none">Open ↗</a>`;
+  } else if (b.type === "table") {
+    d.className = "tablewrap";
+    const head = b.columns.map(c => `<th>${esc(c)}</th>`).join("");
+    const rows = b.rows.map(r => "<tr>" + r.map((c, i) => `<td>${b.columns[i] === "Status" ? statusCell(c) : esc(c)}</td>`).join("") + "</tr>").join("");
+    d.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+  } else if (b.type === "confirm") return approvalCard(b);
+  else if (b.type === "plan") return planCard(b);
+  return d;
+}
+function statusCell(c) {
+  const s = String(c);
+  if (/^OVERDUE/.test(s)) return pill("OVERDUE") + ` <span style="color:var(--muted);font-size:12px">${esc(s.replace("OVERDUE", "").trim())}</span>`;
+  if (/^(DRAFT|SENT|PAID|CANCELLED|COMPLETED|REFUNDED|CREATED|APPROVED)$/.test(s)) return pill(s);
+  return esc(s);
+}
+function render(blocks, stack) {
+  stack = stack || agentRow();
+  for (const b of blocks || []) stack.appendChild(blockEl(b));
+  scrollDown(); refresh();
+}
+
+/* ---------- approval cards */
+const cards = {}; // action_id -> {resolve(status, text)}
+function headline(b) {
+  const h = b.headline || {};
+  const get = k => (b.details.find(d => d[0] === k) || [])[1];
+  return {action: h.action || b.title, amount: h.amount || get("Amount") || get("Total") || "", to: h.recipient || get("Customer") || ""};
+}
+function approvalCard(b) {
+  const h = headline(b);
+  const el = document.createElement("div");
+  el.className = "card approval" + (b.danger ? " danger" : "");
+  const kv = b.details.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  el.innerHTML = `<div class="ap-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Needs your approval</div>
+    <div class="ap-main"><div><div class="ap-action">${esc(h.action)}</div><div class="ap-amount">${esc(h.amount)}</div>
+    ${h.to ? `<div class="ap-to">to <b>${esc(h.to)}</b></div>` : ""}</div></div>
+    <dl class="kv">${kv}</dl>
+    ${b.why ? `<div class="ap-why">${whyHtml(b.why)}</div>` : ""}
+    <div class="btns"><button class="btn primary">Approve</button><button class="btn ghost">Cancel</button></div>`;
+  const btns = el.querySelector(".btns");
+  cards[b.action_id] = {resolve: (status, text) => { btns.innerHTML = resolvedHtml(status, text); }};
+  btns.querySelector(".primary").onclick = () => decide(b.action_id, true, b);
+  btns.querySelector(".ghost").onclick = () => decide(b.action_id, false, b);
+  return el;
+}
+function resolvedHtml(status, text) {
+  const m = {done: ["ok", "✓ Approved"], declined: ["no", "Cancelled · nothing was sent"], error: ["bad", "Failed"], busy: ["no", "Working…"]}[status] || ["no", status];
+  return `<span class="resolved ${m[0]}">${esc(text || m[1])}</span>`;
+}
+async function decide(actionId, approve, b) {
+  cards[actionId]?.resolve("busy");
+  try {
+    const res = await post("/api/confirm", {action_id: actionId, approve});
+    const status = res.step_status || (res.blocks?.[0]?.type === "error" ? "error" : (approve ? "done" : "declined"));
+    cards[actionId]?.resolve(status);
+    if (res.plan_id) updatePlanStep(res.plan_id, res.step, status, res.blocks);
+    else render(res.blocks);
+    if (status === "done") toast(okText(b)); else if (status === "error") toast(res.blocks?.[0]?.text || "Action failed", "bad"); else toast("Cancelled. Nothing was sent.", "info");
+  } catch (e) { cards[actionId]?.resolve("error", "Couldn't reach the server"); toast("Couldn't reach the server", "bad"); }
+}
+const okText = b => ({send_invoice: "Invoice sent", remind_invoice: "Reminder sent", cancel_invoice: "Invoice cancelled",
+  refund_order: "Refund issued", create_payout: "Payout submitted"}[b?.tool] || "Done");
+
+/* ---------- plan cards */
+const plans = {}; // plan_id -> {el, steps}
+function planCard(p) {
+  const el = document.createElement("div"); el.className = "card plan";
+  const steps = p.steps.map(s => {
+    const out = s.blocks.filter(b => b.type === "text" || b.type === "error").map(b => esc(b.text)).join("<br>");
+    const confirms = s.blocks.filter(b => b.type === "confirm");
+    const minis = confirms.map(c => { const h = headline(c);
+      return `<div class="mini" data-aid="${esc(c.action_id)}"><div class="t">${esc(h.action)} · <b>${esc(h.amount)}</b>${h.to ? ` → ${esc(h.to)}` : ""}</div>
+        <div class="acts"><button class="btn primary sm" data-a="1">Approve</button><button class="btn ghost sm" data-a="0">Cancel</button></div></div>`; }).join("");
+    const links = s.blocks.filter(b => b.type === "link").map(b => `<div class="step-out"><a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.label)} ↗</a></div>`).join("");
+    return `<li class="step ${esc(s.status)}" data-n="${s.n}"><div class="num">${s.status === "done" ? "✓" : s.n}</div><div>
+      <div class="step-top"><span class="step-title">${esc(s.summary)}</span><span class="sp">${stepPill(s.status)}</span></div>
+      ${out ? `<div class="step-out">${out}</div>` : ""}${links}${whyHtml(s.why)}${minis}<div class="res"></div></div></li>`;
+  }).join("");
+  el.innerHTML = `<div class="plan-h"><div><h3>${esc(p.title)}</h3><q>${esc(p.request)}</q></div>
+      <span class="pill p-sent">Agent plan</span></div>
+    <ol class="steps">${steps}</ol>
+    ${p.note ? `<div class="step-out" style="padding:0 16px 10px">${esc(p.note)}</div>` : ""}
+    <div class="plan-f"><span class="hint"></span><button class="btn ghost sm" data-all="0">Cancel remaining</button><button class="btn primary sm" data-all="1">Approve all</button></div>`;
+  plans[p.plan_id] = {el, plan: p};
+  el.querySelectorAll(".mini").forEach(m => {
+    const aid = m.dataset.aid, conf = p.steps.flatMap(s => s.blocks).find(b => b.action_id === aid);
+    m.querySelectorAll("button").forEach(btn => btn.onclick = () => decide(aid, btn.dataset.a === "1", conf));
+    cards[aid] = {resolve: (status, text) => { m.querySelector(".acts").innerHTML = resolvedHtml(status, text); }};
+  });
+  el.querySelectorAll("[data-all]").forEach(btn => btn.onclick = () => decidePlan(p.plan_id, btn.dataset.all === "1"));
+  syncPlanFooter(p.plan_id);
+  return el;
+}
+function updatePlanStep(planId, n, status, blocks) {
+  const P = plans[planId]; if (!P) { render(blocks); return; }
+  const li = P.el.querySelector(`.step[data-n="${n}"]`); if (!li) return;
+  const step = P.plan.steps.find(s => s.n === n); if (step) step.status = status;
+  li.className = "step " + status; li.querySelector(".num").textContent = status === "done" ? "✓" : n;
+  li.querySelector(".sp").innerHTML = stepPill(status);
+  const res = li.querySelector(".res"); res.innerHTML = "";
+  for (const b of blocks || []) {
+    if (b.type === "text" || b.type === "error") res.insertAdjacentHTML("beforeend", `<div class="step-out" style="${b.type === "error" ? "color:var(--red)" : ""}">${esc(b.text)}</div>`);
+    if (b.type === "link") res.insertAdjacentHTML("beforeend", `<div class="step-out"><a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.label)} ↗</a></div>`);
+  }
+  syncPlanFooter(planId); refresh();
+}
+function syncPlanFooter(planId) {
+  const P = plans[planId]; const waiting = P.plan.steps.filter(s => s.status === "awaiting").length;
+  const f = P.el.querySelector(".plan-f");
+  f.querySelector(".hint").textContent = waiting ? `${waiting} step${waiting > 1 ? "s" : ""} waiting · approve one by one or all at once` : "All steps resolved";
+  f.querySelectorAll("button").forEach(b => b.disabled = !waiting);
+}
+async function decidePlan(planId, approve) {
+  const P = plans[planId];
+  P.el.querySelectorAll(".mini .acts").forEach(a => { if (a.querySelector("button")) a.innerHTML = resolvedHtml("busy"); });
+  const res = await post(`/api/plan/${planId}/decide`, {approve});
+  if (res.plan) {
+    for (const r of res.results || []) {
+      cards[r.action_id]?.resolve(r.status);
+      updatePlanStep(planId, r.step, r.status, r.blocks);
+    }
+    const failed = res.plan.steps.filter(s => s.status === "error").length;
+    toast(approve ? (failed ? `Plan finished with ${failed} failed step(s)` : "Plan approved and executed") : "Remaining steps cancelled", failed ? "bad" : (approve ? "ok" : "info"));
+  } else render(res.blocks);
+}
+
+/* ---------- send */
+async function send(text) {
+  text = (text || "").trim(); if (!text) return;
+  userMsg(text); $("#input").value = "";
+  const stack = agentRow(); const typing = document.createElement("div"); typing.className = "bubble ai typing"; typing.innerHTML = "<span></span><span></span><span></span>";
+  stack.appendChild(typing); scrollDown();
+  try { const res = await post("/api/chat", {message: text}); typing.remove(); render(res.blocks, stack); loadStatus(); }
+  catch (e) { typing.remove(); render([{type: "error", text: "Couldn't reach the server."}], stack); }
+}
+
+/* ---------- ledger + audit */
+let lastLedger = null;
+async function refresh() {
+  try {
+    const r = await fetch("/api/ledger"); if (!r.ok) return; const L = await r.json(); lastLedger = L;
+    const owed = Object.entries(L.owed || {}), so = $("#sOwed");
+    so.innerHTML = owed.length ? owed.map(([c, v]) => `<div>${esc(money(v, c))}</div>`).join("") : esc(money(0, status?.default_currency || "USD"));
+    so.classList.toggle("multi", owed.length > 1); so.title = owed.map(([c, v]) => money(v, c)).join(" + ");
+    $("#sOver").textContent = L.counts?.overdue ?? 0; $("#sOverWrap").classList.toggle("alert", (L.counts?.overdue ?? 0) > 0);
+    $("#sWait").textContent = L.pending.length;
+    const tb = $("#tabBadge"); tb.hidden = !L.pending.length; tb.textContent = L.pending.length;
+    $("#pending").innerHTML = L.pending.length ? L.pending.map(p => { const h = headline(p);
+      return `<div class="item wait"><div class="top"><span class="nm">${esc(h.action)}${h.to ? " · " + esc(h.to) : ""}</span><span class="amt">${esc(h.amount)}</span></div>
+      <div class="sub">${pill("PAYMENT_PENDING").replace("Pending", "Waiting for you")} Approve or cancel it in the chat</div></div>`; }).join("") : `<div class="none">Nothing waiting. You're all caught up.</div>`;
+    $("#invoices").innerHTML = L.invoices.length ? L.invoices.map(i => `<div class="item"><div class="top"><span class="nm">${esc(i.recipient_name || i.recipient_email || "—")}</span><span class="amt">${money(i.amount, i.currency)}</span></div>
+      <div class="sub">${pill(i.display_status || i.status)}<span>${esc(i.description || "")}</span>${i.due_date ? `<span>· due ${esc(i.due_date)}</span>` : ""}</div>
+      <div class="sub"><span>${esc(i.id)}</span>${i.pay_url ? `<a href="${esc(i.pay_url)}" target="_blank" rel="noopener">pay link ↗</a>` : ""}</div></div>`).join("") : `<div class="none">No invoices yet. Try “Invoice Priya $40 for logo design”.</div>`;
+    $("#orders").innerHTML = L.orders.length ? L.orders.map(o => `<div class="item"><div class="top"><span class="nm">${esc(o.items.map(i => i.quantity + " × " + i.name).join(", ") || o.id)}</span><span class="amt">${money(o.amount, o.currency)}</span></div>
+      <div class="sub">${pill(o.display_status)}${Number(o.refunded) > 0 ? `<span>refunded ${money(o.refunded, o.currency)}</span>` : ""}${o.payer_name ? `<span>· ${esc(o.payer_name)}</span>` : ""}</div>
+      <div class="sub"><span>${esc(o.id)}</span>${["CREATED", "PAYER_ACTION_REQUIRED"].includes(o.status) && o.approve_url ? `<a href="${esc(o.approve_url)}" target="_blank" rel="noopener">checkout link ↗</a>` : ""}</div></div>`).join("") : `<div class="none">No checkout links yet.</div>`;
+    if (status?.paypal_mock && !L.invoices.length && !L.orders.length) $("#seedWrap") && ($("#seedWrap").hidden = false);
+    if (!$("#auditPanel").hidden) loadAudit();
+  } catch (e) {}
+}
+const fmtTime = iso => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString([], {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"}); };
+async function loadAudit() {
+  const r = await fetch("/api/audit?limit=150"); if (!r.ok) return; const {entries} = await r.json();
+  $("#audit").innerHTML = entries.length ? entries.map(e => `<div class="aud"><time datetime="${esc(e.at)}">${esc(fmtTime(e.at))}</time>
+    <div class="s"><span class="ev ${esc(e.event)}">${esc(e.event.replace("_", " "))}</span>${esc(e.summary)}</div>
+    <div class="meta">by ${esc(e.actor)}${e.approved_by && e.approved_by !== e.actor ? ` · approved by ${esc(e.approved_by)}` : ""}${e.tool ? ` · ${esc(e.tool)}` : ""}</div>
+    ${e.why ? `<div class="meta">why: ${esc(e.why)}</div>` : ""}</div>`).join("") : `<div class="none">No actions yet.</div>`;
+}
+
+/* ---------- views (mobile tabs + desktop segmented control) */
+function setView(v) {
+  document.body.dataset.view = v;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+  const panel = v === "audit" ? "audit" : "ledger";
+  document.querySelectorAll(".seg button").forEach(b => b.classList.toggle("on", b.dataset.v === panel));
+  $("#ledgerPanel").hidden = panel !== "ledger"; $("#auditPanel").hidden = panel !== "audit";
+  if (panel === "audit") loadAudit();
+}
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => setView(b.dataset.v));
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => setView(b.dataset.v));
+
+/* ---------- boot */
+$("#f").onsubmit = e => { e.preventDefault(); send($("#input").value); };
+EXAMPLES.forEach(([ic, label, text]) => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "ex";
+  b.innerHTML = `<span class="ic">${ic}</span><span><b>${esc(label)}</b><span>${esc(text)}</span></span>`;
+  b.onclick = () => send(text); $("#examples").appendChild(b);
+});
+$("#seedBtn").onclick = async () => { const r = await fetch("/api/demo/seed", {method: "POST", headers: H}); if (r.ok) { $("#seedWrap").hidden = true; toast("Demo data loaded (simulated)", "info"); refresh(); } };
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  const rec = new SR(); rec.lang = "en-IN"; rec.interimResults = false;
+  rec.onresult = e => { $("#input").value = e.results[0][0].transcript; $("#input").focus(); };
+  rec.onend = () => $("#mic").classList.remove("on");
+  $("#mic").onclick = () => { $("#mic").classList.add("on"); rec.start(); };
+} else { $("#mic").style.display = "none"; }
+
+let status = null;
+async function loadStatus() {
+  status = await fetch("/api/status").then(r => r.json());
+  const mp = $("#modePill"); mp.classList.remove("sandbox", "live"); if (status.mode === "Sandbox") mp.classList.add("sandbox"); if (status.mode === "Live") mp.classList.add("live");
+  $("#modeTxt").textContent = status.mode;
+  mp.title = status.paypal_mock ? "Simulated PayPal: no keys set, no real money or emails" : `Connected to the ${status.paypal}`;
+  const fell = /fallback/.test(status.last_brain || "");
+  $("#brainTxt").textContent = status.llm + (fell ? " (fell back to parser)" : "");
+  $("#brainPill").title = status.llm_enabled ? `LLM function calling (${status.llm}); falls back to the rule-based parser if the model is unreachable` : "Deterministic rule-based parser (no LLM key set)";
+  if (status.paypal_mock && !lastLedger?.invoices?.length && !lastLedger?.orders?.length && $("#seedWrap")) $("#seedWrap").hidden = false;
+}
+loadStatus();
+const q = new URLSearchParams(location.search);
+if (q.get("paid")) { render([{type: "text", text: `The buyer completed checkout for order ${q.get("paid")}; payment captured.`}]); toast("Payment captured", "ok"); history.replaceState(null, "", "/"); }
+if (q.get("cancelled") !== null && q.has("cancelled")) { toast("The buyer cancelled checkout", "info"); history.replaceState(null, "", "/"); }
+refresh(); setInterval(refresh, 4000);
+</script>
+</body>
+</html>
