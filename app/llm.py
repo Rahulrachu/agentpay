@@ -29,6 +29,10 @@ def system_prompt(today: date, default_currency: str) -> str:
     )
 
 
+class LLMHTTPError(RuntimeError):
+    pass
+
+
 class LLMEmptyResponse(ValueError):
     """The model returned neither a tool call nor text (blocked, malformed call, empty candidate).
     The agent treats this like any other LLM failure and falls back to the rule-based parser."""
@@ -91,7 +95,13 @@ class LLMBrain:
         }
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         resp = self.http.post(url, json=body, headers={"x-goog-api-key": self.api_key})
-        resp.raise_for_status()
+        if resp.status_code >= 400:
+            try:
+                err = (resp.json().get("error") or {})
+                detail = f"{err.get('status', '')}: {str(err.get('message', ''))[:200]}"
+            except Exception:
+                detail = resp.text[:200]
+            raise LLMHTTPError(f"Gemini HTTP {resp.status_code} {detail}")
         data = resp.json()
         candidate = (data.get("candidates") or [{}])[0] or {}
         parts = (candidate.get("content") or {}).get("parts") or []

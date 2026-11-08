@@ -280,7 +280,7 @@ class Agent:
                 blocks.append({"type": "text",
                                "text": f"(LLM unavailable: {type(e).__name__}; using the built-in parser instead.)"})
                 self.store.add_audit(actor="system", event="llm_fallback",
-                                     summary=f"LLM call failed ({type(e).__name__}); used the rule-based parser")
+                                     summary=f"LLM call failed ({type(e).__name__}: {str(e)[:240]}); used the rule-based parser")
                 self.last_brain = "rule-based parser (LLM fallback)"
         else:
             self.last_brain = "rule-based parser"
