@@ -89,6 +89,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"models": [m.get("name") for m in r.json().get("models", [])
                            if "generateContent" in (m.get("supportedGenerationMethods") or [])]}
 
+    @app.get("/api/llm/ping", include_in_schema=False)
+    def llm_ping(model: str = "", tools: int = 1):
+        """Time one tiny tool-calling request to a Gemini model (diagnostics; no secrets returned)."""
+        import time as _t
+        import httpx as _httpx
+        from .tools import TOOL_SCHEMAS
+        m = model or settings.llm_model
+        body = {"contents": [{"role": "user", "parts": [{"text": "Invoice Priya $40 for logo design"}]}],
+                "generationConfig": {"temperature": 0}}
+        if tools:
+            body["tools"] = [{"functionDeclarations": TOOL_SCHEMAS}]
+        t0 = _t.time()
+        try:
+            r = _httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent",
+                            json=body, headers={"x-goog-api-key": settings.gemini_api_key}, timeout=90)
+        except Exception as e:
+            return {"model": m, "error": type(e).__name__, "seconds": round(_t.time() - t0, 1)}
+        out = {"model": m, "status": r.status_code, "seconds": round(_t.time() - t0, 1)}
+        try:
+            parts = r.json()["candidates"][0]["content"]["parts"]
+            out["parts"] = [list(p.keys()) for p in parts]
+        except Exception:
+            out["body"] = r.text[:300]
+        return out
+
     @app.get("/api/status")
     def status():
         return {**settings.describe(), "last_brain": agent.last_brain}
